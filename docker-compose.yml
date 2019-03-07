@@ -1,0 +1,6 @@
+version: '2'
+services:
+  python:
+    build: ./.docker/python
+    volumes:
+      - ./src:/usr/src
