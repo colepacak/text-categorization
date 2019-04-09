@@ -2,8 +2,9 @@
 
 ## Purpose
 I want to categorize news articles using machine learning. To do so, I'm going to:
-* tokenize the text using Spacy so that I can clean out the punctuation and stopwords and just have the lemmas (e.g. stems or root word)
+* tokenize the text using spaCy so that I can clean out the punctuation and stopwords and just have the lemmas (e.g. stems or root word)
 * compare the results from scikit-learn's MultinomialNB and LinearSVC when testing and training a model to categorize articles
+* also use spaCy's text categorizer. Not only do I want to give spaCy a shot in general, but it would be helpful to compare another library based on accuracy and ease of implementation.
 * look for ways to evaluate the models
 
 ## Process
@@ -29,7 +30,7 @@ A few things jumped out after looking at the top 20 words in each category:
 
 As a result, I'd like to see how the classifiers compare with 'say' and the pound symbol removed. For now, I'll leave the other three words alone since their ranks are spread out fairly evenly amongst the categories.
 
-#### Metrics using sklearn's MultinomialNB:
+### Metrics using sklearn's MultinomialNB:
 ```
                precision    recall  f1-score   support
 
@@ -44,7 +45,7 @@ entertainment    0.99371   1.00000   0.99685       158
  weighted avg    0.97281   0.97143   0.97145       735
 ```
 
-#### Metrics using sklearn's MultinomialNB with a TF-IDF Transformer:
+### Metrics using sklearn's MultinomialNB with a TF-IDF Transformer:
 ```
                precision    recall  f1-score   support
 
@@ -61,7 +62,7 @@ entertainment    0.98137   1.00000   0.99060       158
 
 Surprisingly, adding tf-idf to the pipeline actually slightly hurt the results. Now I'm curious how blacklisting 'say' and the pound symbol affect the results.
 
-#### Metrics using sklearn's MultinomialNB - blacklisted 'say' and pound symbol:
+### Metrics using sklearn's MultinomialNB - blacklisted 'say' and pound symbol:
 ```
                precision    recall  f1-score   support
 
@@ -76,7 +77,7 @@ entertainment    0.99371   1.00000   0.99685       158
  weighted avg    0.97281   0.97143   0.97145       735
 ```
 
-#### Metrics using sklearn's MultinomialNB with a TF-IDF Transformer - blacklisted 'say' and pound symbol:
+### Metrics using sklearn's MultinomialNB with a TF-IDF Transformer - blacklisted 'say' and pound symbol:
 ```
                precision    recall  f1-score   support
 
@@ -95,7 +96,7 @@ Yet another surprise: blacklisting 'say' and the pound symbol barely made a diff
 
 I'm going to switch classifiers now and swap out MultinomialNB for LinearSVC to see how they compare:
 
-#### Metrics using sklearn's LinearSVC:
+### Metrics using sklearn's LinearSVC:
 ```
                precision    recall  f1-score   support
 
@@ -110,7 +111,7 @@ entertainment    0.97531   1.00000   0.98750       158
  weighted avg    0.96046   0.96054   0.96045       735
 ```
 
-#### Metrics using sklearn's LinearSVC with a TF-IDF Transformer:
+### Metrics using sklearn's LinearSVC with a TF-IDF Transformer:
 ```
                precision    recall  f1-score   support
 
@@ -127,7 +128,7 @@ entertainment    0.98750   1.00000   0.99371       158
 
 The combination of LinearSVC and tf-idf has so far been the best performer. Later though, just for kicks, I added the blacklists back in and they ended up producing an additional bump, both with and without tf-idf.
 
-#### Metrics using sklearn's LinearSVC - blacklisted 'say' and pound symbol:
+### Metrics using sklearn's LinearSVC - blacklisted 'say' and pound symbol:
 ```
                precision    recall  f1-score   support
 
@@ -142,7 +143,7 @@ entertainment    0.96914   0.99367   0.98125       158
  weighted avg    0.96049   0.96054   0.96047       735
 ```
 
-#### Metrics using sklearn's LinearSVC with a TF-IDF Transformer - blacklisted 'say' and pound symbol:
+### Metrics using sklearn's LinearSVC with a TF-IDF Transformer - blacklisted 'say' and pound symbol:
 ```
                precision    recall  f1-score   support
 
@@ -157,8 +158,29 @@ entertainment    0.98750   1.00000   0.99371       158
  weighted avg    0.97575   0.97551   0.97553       735
 ```
 
+### Metrics using spaCy's text categorizer
+```
+                 correct    total  percent
+
+       politics      120      125   0.9600
+       business      170      181   0.9392
+  entertainment      128      129   0.9922
+           tech      137      142   0.9648
+          sport      157      158   0.9937
+
+            all      712      735   0.9687
+```
+
 ## TODO
-* Look into disable unnecessary spacy pipeline components.
+* Look into disabling unnecessary spaCy pipeline components.
 
 ## Local Development
-Run `docker-compose up` in the project root to launch a run a Python container that includes all of the dependencies, which can be found in `.docker/requirements.txt`. I downloaded the Spacy model in the dockerfile so that I didn't need to do it manually later on.
+Run `docker-compose up` in the project root to launch a run a Python container that includes all of the dependencies, which can be found in `.docker/requirements.txt`. I downloaded the spaCy model in the dockerfile so that I didn't need to do it manually later on.
+
+### sklearn
+In the project root, run `python text-cat-sklearn.py`.
+
+### spaCy
+Training with spaCy will split the data into train and test sets, saving the latter to a CSV for later use when running the test script. The reason for this was the spaCy text categorizer can take awhile to train a model, so saving it to disk was helpful. Consequently, the test script needs both a saved model (`/spacy/model`) and the test data (`/spacy/test.csv`).
+
+In the spacy directory, run `python train.py`. Wait awhile for the model to be built. Then, run `python test.py`.
